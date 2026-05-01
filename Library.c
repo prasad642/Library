@@ -1,119 +1,110 @@
 #include<stdio.h>
-#include<stdbool.h>
 #include<string.h>
+#include<stdbool.h>
 #include<stdlib.h>
 
 typedef struct{
-    char a_name[50];
+    char a_name[20];
     int birthYear;
-} Author;
+}Author;
 
 typedef struct{
     int ID;
-    char title[50];
-    Author a1;
+    char title[30];
+    Author a;
     float price;
-} Book;
+}Book;
 
-void displayBook(Book *b);
+void displayBook(Book *);
 
 int main(){
-    int n, target, id_ = -1, loaded_n;
-    bool isFound = false;
+    bool isHere = false;
+    int n,i,target=0,loaded_n;
+    printf("Enter Number of books:");
+    scanf("%d",&n);
+    getchar();
 
-    FILE *library_in, *library_out;
-
-    // Open file for writing
-    library_in = fopen("library.bin", "wb");
+    FILE *library_in,*library_out;
+    library_in = fopen("Library.bin","wb");
     if(library_in == NULL){
-        printf("File not created...try again\n");
+        printf("File creation failed");
         return 1;
     }
+    
 
-    printf("Enter number of books: ");
-    scanf("%d", &n);
-    getchar();
 
     Book *ptr = (Book *)malloc(n * sizeof(Book));
     if(ptr == NULL){
-        printf("Memory allocation failed!\n");
+        printf("Allocation Failed...try again");
         return 1;
-    }
-
-    // Input data
-    for(int i = 0; i < n; i++){
-        printf("\nEnter details of book %d:\n", i + 1);
-
-        printf("Enter Book Title: ");
-        fgets(ptr[i].title, 50, stdin);
-        ptr[i].title[strcspn(ptr[i].title, "\n")] = 0;
-
-        printf("Enter Author Name: ");
-        fgets(ptr[i].a1.a_name, 50, stdin);
-        ptr[i].a1.a_name[strcspn(ptr[i].a1.a_name, "\n")] = 0;
-
-        printf("Enter Birth Year Of Author: ");
-        scanf("%d", &ptr[i].a1.birthYear);
-        getchar();
-
-        ptr[i].ID = i + 1;
-        printf("Assigned Book ID: %d\n", ptr[i].ID);
-
-        printf("Enter cost: ");
-        scanf("%f", &ptr[i].price);
-        getchar();
-    }
-
-    // Write to file
-    fwrite(&n, sizeof(n), 1, library_in);
-    fwrite(ptr, sizeof(Book), n, library_in);
-
-    fclose(library_in);
-    free(ptr);
-
-    // Read from file
-    library_out = fopen("library.bin", "rb");
-    if(library_out == NULL){
-        printf("Error opening file for reading\n");
-        return 1;
-    }
-
-    fread(&loaded_n, sizeof(loaded_n), 1, library_out);
-
-    ptr = (Book *)malloc(loaded_n * sizeof(Book));
-    if(ptr == NULL){
-        printf("Memory allocation failed!\n");
-        return 1;
-    }
-
-    fread(ptr, sizeof(Book), loaded_n, library_out);
-    fclose(library_out);
-
-    // Search
-    printf("\nEnter Book ID you're looking for: ");
-    scanf("%d", &target);
-
-    for(int i = 0; i < loaded_n; i++){
-        if(target == ptr[i].ID){
-            isFound = true;
-            id_ = i;
-            break;
+    }else{
+        //Asking details for books
+        for(i=0;i<n;i++){
+            printf("Enter Book Title:");
+            fgets(ptr[i].title,30,stdin);
+            ptr[i].title[strcspn(ptr[i].title,"\n")] = 0;
+            printf("Enter Author Name:");
+            fgets(ptr[i].a.a_name,20,stdin);
+            ptr[i].a.a_name[strcspn(ptr[i].a.a_name,"\n")] = 0;
+            printf("Enter birth year of the author:");
+            scanf("%d",&ptr[i].a.birthYear);
+            getchar();
+            printf("Asssigned ID: %d\n",i+1);
+            ptr[i].ID = i+1;
+            printf("Enter cost:");
+            scanf("%f",&ptr[i].price);
+            getchar();
         }
+
+        //loading details into files
+        fwrite(&n,sizeof(n),1,library_in);
+        fwrite(ptr,sizeof(Book),n,library_in);
+
+        fclose(library_in);
+        free(ptr);
+
+
+        library_out = fopen("Library.bin","rb");
+        if(library_out == NULL){
+            printf("Loading file Failed...try again");
+            return 1;
+        }
+
+        fread(&loaded_n,sizeof(loaded_n),1,library_out);
+        
+        ptr = (Book *)malloc(loaded_n * sizeof(Book));
+        if(ptr == NULL){
+            printf("Memory allocation Failed...try again");
+        }else{
+            fread(ptr,sizeof(Book),loaded_n,library_out);
+            printf("enter book ID:");
+            scanf("%d",&target);
+            for(i=0;i<loaded_n;i++){
+                if(target == ptr[i].ID){
+                    isHere = true;
+                    break;
+                }
+            }
+
+            if(isHere){
+                displayBook(&ptr[i]);
+            }else{
+                printf("Book with ID: %d not found in library",target);
+            }
+        }
+
+        fclose(library_out);
+        free(ptr);
+        ptr = NULL;
     }
 
-    if(isFound){
-        displayBook(&ptr[id_]);
-    } else {
-        printf("\nSorry, Book with ID: %d not found\n", target);
-    }
-
-    free(ptr);
     return 0;
 }
 
 void displayBook(Book *b){
-    printf("\nBook Name: %s\n", b->title);
-    printf("Written by %s (Born %d)\n", b->a1.a_name, b->a1.birthYear);
-    printf("ID: %d\n", b->ID);
-    printf("Cost: %.2f\n", b->price);
+    printf("Book Found in the Library..\n");
+    printf("Book Title: %s\n",b->title);
+    printf("Written by %s, born in %d\n",b->a.a_name,b->a.birthYear);
+    printf("Given ID:%d\n",b->ID);
+    printf("Cost : $%.2f",b->price);
 }
